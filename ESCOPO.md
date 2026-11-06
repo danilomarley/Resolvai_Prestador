@@ -2,9 +2,9 @@
 
 Aplicação web do **prestador de serviços** (fornecedor) do marketplace ResolvAI. Ela usa **o mesmo backend** do app do contratante ([Resolvai_Backend_Node](https://github.com/danilomarley/Resolvai_Backend_Node)) e é a contraparte do [Resolvai_Cliente](https://github.com/danilomarley/Resolvai_Cliente): o contratante publica pedidos e escolhe propostas; o prestador encontra pedidos, envia propostas e acompanha o resultado.
 
-Este documento diz **o que construir** e **como saber que está pronto**. Cada épico tem uma história, critérios de aceite numerados e testáveis, as dependências de backend e a estimativa. Onde há decisão pendente, ela está marcada como **A DEFINIR** na seção [Decisões](#decisões); nada foi decidido por suposição.
+Este documento diz **o que construir** e **como saber que está pronto**. Cada épico tem uma história, critérios de aceite numerados e testáveis, as dependências de backend e a estimativa. As decisões tomadas estão na seção [Decisões](#decisões); o que ainda está em aberto fica marcado como bloqueado.
 
-> Estado do repositório: vazio até este documento. Todo o front do prestador começa do zero.
+> **Situação:** a fase 1 (E0 a E6) está implementada neste repositório, sobre o backend [Resolvai_Backend_Node](https://github.com/danilomarley/Resolvai_Backend_Node) (rotas em `docs/PRESTADOR.md` de lá). A fase 2 segue bloqueada pelas definições da seção 6. As decisões D1 a D6 foram tomadas (seção [Decisões](#decisões)); onde elas mudaram um critério de aceite, o texto abaixo já está ajustado.
 
 ## Sumário
 
@@ -143,22 +143,22 @@ Objetivo: **um prestador cadastrado consegue encontrar um pedido, enviar uma pro
 
 ### E1 — Cadastro e onboarding do prestador (P1)
 
-**Estimativa:** front 5–7 dias · backend 5–7 dias. **Depende das decisões D1 e D2.**
+**Estimativa:** front 5–7 dias · backend 5–7 dias. **Implementado** com as decisões D1 (cadastro livre, sem análise) e D2 (nenhum documento nesta etapa): o onboarding tem **2 passos**.
 
 **Como** prestador, **quero** me cadastrar informando meus dados, as categorias e regiões em que atuo e meus documentos, **para** começar a receber pedidos compatíveis com o meu perfil.
 
 **Critérios de aceite**
-1. O cadastro tem **3 passos** com indicador de progresso: (1) dados pessoais, (2) categorias e regiões de atuação, (3) documentos. É possível voltar ao passo anterior sem perder o que foi digitado.
+1. O cadastro tem **2 passos** com indicador de progresso: (1) dados pessoais (CPF, endereço e contato, o mesmo formulário do contratante) e (2) categorias e cidades de atuação. O onboarding é um **modal que não pode ser dispensado** até ser concluído; quem preferir pode sair da conta.
 2. **Passo 1:** nome completo, CPF (ou CNPJ, ver D2), telefone/WhatsApp com DDD, endereço com busca automática de CEP. Máscaras e validações iguais às do app do contratante; mensagens de erro por campo.
 3. **Passo 2:** o prestador escolhe **uma ou mais categorias** de uma lista vinda da API (não digitada livremente) e **uma ou mais regiões** (cidade e, opcionalmente, bairros). Exige ao menos uma categoria e uma região.
-4. **Passo 3:** envio dos documentos exigidos (tipos e tamanho conforme D2): aceita imagem ou PDF, mostra nome, tamanho e permite remover antes de enviar; arquivo inválido ou acima do limite mostra o motivo. O arquivo é validado também no backend.
-5. Ao concluir, o prestador vê o estado do perfil: **ativo** ou **em análise** (se a decisão D1 exigir aprovação), com o que isso permite (ex.: em análise não envia propostas).
+4. *(Sem documentos nesta etapa, decisão D2.)*
+5. Ao concluir, o perfil fica **ativo** na hora: não há análise nem aprovação (decisão D1).
 6. **Cadastro incompleto é retomado:** quem sai no meio volta ao passo em que parou ao entrar de novo; quem já finalizou nunca vê o onboarding.
 7. Quem tem sessão de prestador com cadastro incompleto e tenta abrir qualquer tela privada é levado ao onboarding (e volta à tela pedida ao terminar).
 8. Envio bloqueado durante o POST (T8); erros da API (ex.: CPF já em uso) aparecem no passo correspondente.
 9. Testes: validações e máscaras; navegação entre passos preservando dados; retomada; arquivo inválido; fluxo completo no navegador (desktop e 390×700).
 
-**Backend necessário:** papel `Prestador` no cadastro (D1); perfil profissional (categorias, regiões, status de aprovação); catálogo de categorias; upload e armazenamento privado de documentos; validação de CPF/CNPJ.
+**Backend:** papel `Prestador` no cadastro público (`POST /api/v1/auth/register-provider`), perfil profissional (categorias e cidades) e catálogo de categorias (script SQL `015`). Documentos e CNPJ ficam para uma etapa futura.
 
 ### E2 — Feed de pedidos (P2)
 
@@ -173,7 +173,7 @@ Objetivo: **um prestador cadastrado consegue encontrar um pedido, enviar uma pro
 4. **Compatibilidade:** o card mostra o selo "Compatível com seu perfil" quando a categoria **e** a região do pedido batem com as do prestador. A regra é determinística e descrita na tela; **não** se exibe percentual de "IA" sem fonte (T1). Por padrão o feed prioriza compatíveis (D4).
 5. **Faixa de indicadores (KPIs)** no topo da Home, todos vindos da API: pedidos novos hoje, pedidos compatíveis abertos, propostas enviadas e propostas escolhidas. Sem dado, mostra "—".
 6. Pedido que já enviou proposta mostra o selo "Proposta enviada" e o atalho para ela.
-7. Prestador **em análise** (E1) vê o feed, mas com aviso de que ainda não pode enviar propostas.
+7. *(Sem estado "em análise" nesta etapa, decisão D1.)*
 8. Clicar no card abre o detalhe do pedido (E3).
 9. Testes: filtros combinados e URL; paginação; estado vazio; selo de compatibilidade; verificação no navegador em 390×700.
 
@@ -213,7 +213,7 @@ Campos do protótipo: *Valor total*, *Prazo de execução*, *Data de início dis
 5. Enviar exige uma **confirmação em modal** ("Enviar proposta de R$ X, prazo de N dias?"). Durante o envio, o modal não fecha (T8).
 6. **Uma proposta ativa por pedido e por prestador:** tentar propor de novo mostra a mensagem da API (409) e leva à proposta existente.
 7. Só é possível propor a pedido **aberto e sem proposta escolhida**; caso contrário a API recusa (409) e a tela explica por quê.
-8. Prestador **em análise** não envia (mensagem clara; API também recusa).
+8. Prestador sem cadastro finalizado não envia (a API recusa com "Finalize o cadastro antes de enviar uma proposta."; o app só libera o acesso depois do onboarding).
 9. Ao enviar com sucesso, o prestador é levado a **Minhas propostas** (E5) com a nova proposta destacada e o aviso "Proposta enviada".
 10. **Editar** (enquanto `Sent` ou `Viewed` e o pedido aberto) reutiliza o mesmo formulário preenchido; **retirar** pede confirmação em modal e a proposta deixa de aparecer ao contratante. Proposta `Chosen` **não** pode ser editada nem retirada pelo app (mensagem explica).
 11. Valores monetários usam formato brasileiro (R$ 1.234,56) na tela e ponto decimal na API.
@@ -274,7 +274,7 @@ Campos do protótipo: *Valor total*, *Prazo de execução*, *Data de início dis
 
 | Método e rota | Épico | Finalidade |
 |---|---|---|
-| `POST /api/v1/auth/register-provider` *(ou convite / criação por admin, ver D1)* | E1 | Cria usuário com papel `Prestador`. |
+| `POST /api/v1/auth/register-provider` | E1 | Cria usuário com papel `Prestador` (cadastro livre, D1). |
 | `GET /api/v1/catalog/categories` | E1, E2 | Categorias de serviço aceitas. |
 | `GET` · `PUT /api/v1/provider/profile` | E1, E6 | Perfil profissional: categorias, regiões, status de aprovação. |
 | `POST /api/v1/provider/documents` (multipart) · `GET /api/v1/provider/documents` | E1, E6 | Envio e situação dos documentos (armazenamento privado). |
@@ -323,7 +323,7 @@ Um épico só está pronto quando **todos** os itens valem:
 - [ ] Testes automatizados passam (`lint`, `build`, `test`) e o fluxo principal foi exercitado no navegador, em desktop e 390×700.
 - [ ] Revisão de acessibilidade básica: teclado, foco, rótulos e contraste.
 - [ ] README ou este documento atualizados quando o comportamento mudou.
-- [ ] PR aberto para `main` com resumo, como foi verificado e o que ficou de fora.
+- [ ] Mudança entregue por commit ou PR na `main`, com resumo e o que ficou de fora.
 
 ---
 
@@ -336,18 +336,13 @@ Um épico só está pronto quando **todos** os itens valem:
 | Acesso a pedido de outro usuário | A API responde **404** (não 403), como nas demais rotas de pedidos. |
 | Prazo da proposta | **`prazo_dias` numérico** (além do texto), usado na ordenação do contratante. |
 | Proposta visualizada | Marcada quando o contratante **abre o detalhe** da proposta; a listagem não marca. |
-| Aceite da proposta | **Não** coloca o pedido em andamento. Isso só acontece **após o pagamento**. |
+| Aceite da proposta | Marca a proposta como `Chosen` e as demais como `NotChosen`. **Não** coloca o pedido em andamento: isso só acontece **após o pagamento**. |
 | Pagamento e repasse | **Nada definido** (gateway, escrow, taxa, estados). Bloqueia o E10. |
+| D1 — Como o prestador entra | **Cadastro livre**, igual ao do contratante (`/cadastro`). Sem convite, sem aprovação. |
+| D2 — Documentos | **Nenhum** nesta etapa. |
+| D3 — Plataforma | **Só web responsivo.** |
+| D4 — Compatibilidade do feed | Pedido **compatível** = a categoria do pedido está entre as do prestador **e** a cidade do pedido está entre as dele (sem diferenciar acentos e maiúsculas). Pedidos não compatíveis continuam visíveis, sem o selo. |
+| D5 — Campos extras da proposta | Fase 1 usa o que o banco já tem: **valor, prazo em dias, descrição e garantia** (obrigatória). Materiais incluídos entram na descrição; "data de início" e "tipo de garantia" ficam para uma etapa futura, com migração. |
+| D6 — Categorias | Catálogo fixo servido pela API (`GET /api/v1/catalog/categories`), com a **primeira lista em SQL** (`db/scripts/015_create_categorias_servico.sql` no backend), editável direto na tabela. |
 
-### A DEFINIR
-
-| # | Decisão | Impacto | Sugestão |
-|---|---|---|---|
-| **D1** | **Como um prestador entra:** cadastro livre, convite ou aprovação por administrador? O protótipo cita "selo verificado" e curadoria, mas não existe painel administrativo. | E1, E2, E4 (quem pode propor) | Cadastro livre com perfil **em análise** até aprovação manual simples, ou aprovação automática no início. Precisa ser escolhido. |
-| **D2** | **Documentos e identificação:** CPF, CNPJ ou ambos; quais documentos são exigidos; quem confere. | E1, E6 | Definir lista mínima (ex.: documento com foto) e o responsável pela conferência. |
-| **D3** | **Plataforma:** só web responsivo ou também aplicativo mobile (o protótipo tem `fornecedor.html`)? | Escopo e prazo | Web responsivo primeiro; app nativo é projeto à parte. |
-| **D4** | **Regra de compatibilidade do feed:** categoria + região exatas? Raio por CEP? | E2 | Categoria **e** cidade iguais; refinar depois. |
-| **D5** | **Campos extras da proposta** do protótipo (data de início disponível, materiais incluídos, tipo e condições da garantia): entram na fase 1? | E4, banco | Fase 1 com o que o banco já tem (valor, prazo, descrição, garantia); materiais podem ir na descrição. Campos novos só com migração. |
-| **D6** | **Lista de categorias de serviço:** quem mantém e quais são. Hoje o contratante digita a categoria livremente. | E1, E2 | Catálogo fixo inicial servido pela API; unificar com o app do contratante. |
-
-Quando uma decisão for tomada, mova-a para "Já tomadas" e ajuste os critérios dos épicos afetados.
+Novas decisões entram na tabela acima, e os critérios dos épicos afetados são ajustados.

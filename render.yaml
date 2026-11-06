@@ -1,0 +1,19 @@
+# Deploy do app do prestador no Render (Static Site). Espelha o front do contratante.
+services:
+  - type: web
+    name: resolvai-prestador
+    runtime: static
+    branch: main
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      # URL da API no Render, lida no build (ex.: https://resolvai-api.onrender.com).
+      - key: VITE_API_BASE_URL
+        sync: false
+    # O React Router controla as rotas no navegador: qualquer caminho serve o index.html.
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

@@ -1,0 +1,36 @@
+:root {
+  --color-primary: #c2410c; /* laranja do prestador, escurecido para contraste AA com texto branco */
+  --color-primary-hover: #9a3412;
+  --color-primary-soft: #fff1e8;
+  --color-secondary: #14478b;
+  --color-secondary-soft: #edf3fb;
+  --color-background: #f5f8fc;
+  --color-surface: #ffffff;
+  --color-text: #0f1c2e;
+  --color-muted: #5c6d84;
+  --color-border: #e7ecf3;
+  --color-success: #08775e;
+  --color-success-soft: #e9f7f0;
+  --color-warning: #95620b;
+  --color-warning-soft: #fff6e3;
+  --color-danger: #c33d4d;
+
+  /* Tipografia */
+  --font-main: 'Rajdhani', system-ui, sans-serif;
+  --font-secondary: 'Inter', system-ui, sans-serif;
+  --font-size-sm: 0.875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.5rem;
+
+  /* Espaçamentos */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 2rem;
+
+  /* Bordas e elevação */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --shadow-card: 0 4px 24px #17283f03;
+}
