@@ -47,7 +47,7 @@ O app depende dos scripts SQL `014` a `017` do backend (`db/scripts`, ou `db/apl
 
 ## Deploy
 
-Static Site no Render, descrito em `render.yaml` (`npm ci && npm run build`, publicação de `dist`, reescrita de qualquer caminho para `index.html`). Defina `VITE_API_BASE_URL` e libere o endereço do site em `CORS_ALLOWED_ORIGINS` da API.
+Static Site no Render, descrito em `render.yaml` (Blueprint): `npm ci && npm run build`, publicação de `dist` e duas regras de reescrita. `/api/*` é encaminhado para a API (`https://resolvai-api.onrender.com`) na mesma origem, então **não há CORS nem `VITE_API_BASE_URL`** neste deploy; o resto cai em `index.html` para o React Router funcionar com F5 e links diretos. Para apontar para outra API, troque o destino da primeira regra (ou defina `VITE_API_BASE_URL` no build e libere o endereço em `CORS_ALLOWED_ORIGINS` da API).
 
 ## Fluxo de trabalho
 

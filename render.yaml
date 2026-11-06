@@ -1,4 +1,4 @@
-# Deploy do app do prestador no Render (Static Site). Espelha o front do contratante.
+# Deploy do app do prestador no Render (Static Site), via Blueprint.
 services:
   - type: web
     name: resolvai-prestador
@@ -9,11 +9,14 @@ services:
     envVars:
       - key: NODE_VERSION
         value: "22"
-      # URL da API no Render, lida no build (ex.: https://resolvai-api.onrender.com).
-      - key: VITE_API_BASE_URL
-        sync: false
-    # O React Router controla as rotas no navegador: qualquer caminho serve o index.html.
+      # VITE_API_BASE_URL fica vazio: o app chama /api na própria origem e o Render encaminha para a API
+      # (regra abaixo). Assim não é preciso liberar este endereço em CORS_ALLOWED_ORIGINS da API.
     routes:
+      # Proxy reverso para a API no Render (mesma origem, sem CORS).
+      - type: rewrite
+        source: /api/*
+        destination: https://resolvai-api.onrender.com/api/*
+      # O React Router controla as rotas no navegador: qualquer outro caminho serve o index.html.
       - type: rewrite
         source: /*
         destination: /index.html
